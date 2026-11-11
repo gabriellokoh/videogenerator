@@ -15,10 +15,9 @@ jobs:
         with:
           node-version: 20
 
-      - name: Instalar Remotion e Dependencias Direto
+      - name: Instalar Dependencias
         run: |
-          npm init -y
-          npm install remotion@latest react@^18.2.0 react-dom@^18.2.0
+          npm install --save react@^18.2.0 react-dom@^18.2.0 remotion@latest
 
       - name: Renderizar Video
         run: npx remotion render src/Root.tsx MyVideo out/video.mp4
