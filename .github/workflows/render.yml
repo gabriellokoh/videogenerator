@@ -17,6 +17,7 @@ jobs:
 
       - name: Instalar Dependencias
         run: |
+          npm init -y
           npm install --save react@^18.2.0 react-dom@^18.2.0 remotion@latest
 
       - name: Renderizar Video
