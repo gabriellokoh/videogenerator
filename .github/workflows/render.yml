@@ -15,8 +15,14 @@ jobs:
         with:
           node-version: 22
 
+      - name: Instalar Dependencias
+        run: npm install
+
+      - name: Instalar Navegador do Remotion
+        run: npx remotion browser ensure
+
       - name: Renderizar Video com Remotion
-        run: npx --yes remotion@latest render src/Root.tsx MyVideo out/video.mp4
+        run: npx remotion render src/Root.tsx MyVideo out/video.mp4
 
       - name: Salvar Arquivo MP4
         uses: actions/upload-artifact@v4
