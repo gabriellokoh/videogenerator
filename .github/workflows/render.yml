@@ -1,0 +1,29 @@
+name: Renderizar Video Remotion
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar Dependencias
+        run: npm install
+
+      - name: Renderizar Video
+        run: npx remotion render src/Root.tsx MyVideo out/video.mp4
+
+      - name: Salvar Arquivo MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-final
+          path: out/video.mp4
