@@ -2,10 +2,19 @@ name: Renderizar Video Remotion
 
 on:
   workflow_dispatch:
+    inputs:
+      modo:
+        description: "teste = 30s em baixa qualidade | completo = video inteiro 1440p 60fps"
+        type: choice
+        options:
+          - teste
+          - completo
+        default: teste
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 340
     steps:
       - name: Checkout Codigo
         uses: actions/checkout@v4
@@ -15,15 +24,27 @@ jobs:
         with:
           node-version: 22
 
-      - name: Instalar Dependencias
+      - name: Extrair projeto
         run: |
-          npm install
+          unzip -o project.zip
+          mkdir -p public out
+          cp audio.mp3 public/audio.mp3
+
+      - name: Instalar Dependencias
+        run: npm install
 
       - name: Renderizar Video com Remotion
-        run: npx remotion render src/Root.tsx MyVideo out/video.mp4
+        run: |
+          if [ "${{ github.event.inputs.modo }}" = "completo" ]; then
+            npx remotion render src/Root.tsx MyVideo out/video.mp4 --codec=h264 --crf=16 --pixel-format=yuv420p --audio-codec=aac --audio-bitrate=320k --jpeg-quality=95 --concurrency=2
+          else
+            npx remotion render src/Root.tsx MyVideo out/video.mp4 --codec=h264 --crf=28 --scale=0.5 --frames=0-1799 --concurrency=2
+          fi
 
       - name: Salvar Arquivo MP4
         uses: actions/upload-artifact@v4
         with:
           name: video-final
           path: out/video.mp4
+          retention-days: 2
+          compression-level: 0
