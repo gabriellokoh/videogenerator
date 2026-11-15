@@ -4,10 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       modo:
-        description: "teste = 30s em baixa qualidade | completo = video inteiro 1440p 60fps"
+        description: "teste = primeiros 30s (baixa qualidade) | estudo = trecho do meio com vidro (baixa qualidade) | completo = video inteiro 1440p 60fps"
         type: choice
         options:
           - teste
+          - estudo
           - completo
         default: teste
 
@@ -15,6 +16,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 340
+    permissions:
+      contents: write
     steps:
       - name: Checkout Codigo
         uses: actions/checkout@v4
@@ -24,11 +27,20 @@ jobs:
         with:
           node-version: 22
 
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Extrair projeto
         run: |
           unzip -o project.zip
           mkdir -p public out
-          cp audio.mp3 public/audio.mp3
+
+      - name: Preparar audio e analise da voz
+        run: |
+          pip install numpy imageio-ffmpeg
+          python prepare_audio.py
 
       - name: Instalar Dependencias
         run: npm install
@@ -37,14 +49,22 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.modo }}" = "completo" ]; then
             npx remotion render src/Root.tsx MyVideo out/video.mp4 --codec=h264 --crf=16 --pixel-format=yuv420p --audio-codec=aac --audio-bitrate=320k --jpeg-quality=95 --concurrency=2
+          elif [ "${{ github.event.inputs.modo }}" = "estudo" ]; then
+            npx remotion render src/Root.tsx MyVideo out/video.mp4 --codec=h264 --crf=28 --scale=0.5 --frames=6600-8399 --concurrency=2
           else
             npx remotion render src/Root.tsx MyVideo out/video.mp4 --codec=h264 --crf=28 --scale=0.5 --frames=0-1799 --concurrency=2
           fi
+
+      - name: Publicar em Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "video-${{ github.run_number }}" out/video.mp4 --title "Video ${{ github.run_number }} (${{ github.event.inputs.modo }})" --notes "Render automatico" --repo "${{ github.repository }}"
 
       - name: Salvar Arquivo MP4
         uses: actions/upload-artifact@v4
         with:
           name: video-final
           path: out/video.mp4
-          retention-days: 2
+          retention-days: 1
           compression-level: 0
