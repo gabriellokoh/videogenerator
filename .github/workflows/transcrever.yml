@@ -42,7 +42,7 @@ jobs:
                       "end": round(w.end, 2)
                   })
 
-          json.dump(words, open("words.json", "w"), indent=2)
+          with open("words.json", "w", encoding="utf-8") as f:json.dump(words, f, ensure_ascii=False, indent=2)
           EOF
 
       - name: Salvar timestamps
