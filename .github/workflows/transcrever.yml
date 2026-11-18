@@ -1,3 +1,4 @@
+
 name: Transcrever Audio
 
 on:
@@ -23,12 +24,24 @@ jobs:
           python - <<'EOF'
           import json
           from faster_whisper import WhisperModel
+
           model = WhisperModel("small", device="cpu", compute_type="int8")
-          segments, _ = model.transcribe("audio.mp3", language="en", word_timestamps=True)
+
+          segments, _ = model.transcribe(
+              "audio.mp3",
+              task="transcribe",
+              word_timestamps=True
+          )
+
           words = []
           for s in segments:
               for w in s.words:
-                  words.append({"word": w.word.strip(), "start": round(w.start, 2), "end": round(w.end, 2)})
+                  words.append({
+                      "word": w.word.strip(),
+                      "start": round(w.start, 2),
+                      "end": round(w.end, 2)
+                  })
+
           json.dump(words, open("words.json", "w"), indent=2)
           EOF
 
